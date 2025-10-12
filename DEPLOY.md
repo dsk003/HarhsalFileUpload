@@ -1,6 +1,6 @@
-# 🚀 Deploy to Render (Super Simple - ONE Service!)
+# 🚀 Deploy to Render (ONE Web Service)
 
-## You only need ONE Web Service now! Everything runs together.
+## Simple 5-Minute Deployment
 
 ### Step-by-Step:
 
@@ -12,7 +12,7 @@
 
 4. **Settings**:
    ```
-   Build Command: chmod +x build.sh && ./build.sh
+   Build Command: npm install && npm run build
    Start Command: npm start
    ```
 
@@ -24,48 +24,50 @@
 
 6. **Click**: "Create Web Service"
 
-7. **Wait 3-5 minutes** for build
+7. **Wait 3-5 minutes** for build to complete
 
-8. **Done!** Visit your Render URL to see the upload interface!
-
----
-
-## What Changed?
-
-✅ **ONE service instead of two**  
-✅ **Backend serves the React frontend**  
-✅ **ONE URL for everything**  
-✅ **Much simpler!**
+8. **✅ Done!** Visit your Render URL to see the upload interface!
 
 ---
 
-## How It Works:
+## What This Does:
 
-- Your Express server now serves the built React files
-- API endpoints: `/api/upload`, `/api/health`
-- Frontend UI: `/` (root and all other routes)
-- Everything on the same domain, no CORS issues!
+1. **`npm install`** - Installs backend dependencies
+2. **`npm run build`** - Installs frontend dependencies AND builds React app
+3. **`npm start`** - Starts the Express server which serves both API and UI
 
 ---
 
-## If You Get Errors:
+## If You're Updating:
 
-### "Build failed"
-- Check that environment variables are set
-- Make sure build script has execute permissions
+If you already have a Web Service running:
 
-### "Cannot find module"
-- Render will install all dependencies automatically
-- Just wait for the build to complete
+1. Go to your service → **Settings**
+2. Change **Build Command** to: `npm install && npm run build`
+3. Click **"Save Changes"**
+4. Click **"Manual Deploy"** → **"Deploy latest commit"**
+5. Wait for deployment to finish
+
+---
+
+## Troubleshooting:
 
 ### Still seeing JSON instead of UI?
-- Wait a few minutes for Render to finish building
-- Check the "Logs" tab in Render dashboard
-- Make sure the build completed successfully
+- Check the "Logs" tab in Render
+- Look for "✅ Serving frontend from:" message
+- If you see "⚠️ Frontend dist folder not found", the build didn't complete
+- Try redeploying with the correct build command
+
+### Build fails?
+- Make sure environment variables are set
+- Check that both backend and frontend package.json files exist in your repo
+
+### Takes too long?
+- First build takes 3-5 minutes (frontend needs to compile)
+- Subsequent deploys are faster
 
 ---
 
 ## That's It!
 
-No more confusion about Root Directory or Static Sites. Just ONE Web Service! 🎉
-
+**One service, one URL, one deployment!** 🎉

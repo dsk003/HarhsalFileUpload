@@ -4,6 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 const FormData = require('form-data');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -13,7 +14,13 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from frontend build
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+const distPath = path.join(__dirname, 'frontend', 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  console.log('✅ Serving frontend from:', distPath);
+} else {
+  console.log('⚠️  Frontend dist folder not found. Build the frontend first!');
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -109,7 +116,21 @@ app.get('/api/files', async (req, res) => {
 
 // Serve React app for all other routes (must be last)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+  const indexPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.json({ 
+      message: '🚀 File Upload API is running!',
+      status: 'Frontend not built yet',
+      note: 'Run "npm run build" to build the frontend',
+      endpoints: {
+        health: '/api/health',
+        upload: 'POST /api/upload',
+        files: '/api/files'
+      }
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
