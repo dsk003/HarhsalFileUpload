@@ -63,7 +63,14 @@ function Login({ onSwitchToSignup }) {
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message">
+              {error}
+              <div className="error-hint">
+                💡 Tip: If you had an account before, you may need to create a new one due to recent updates.
+              </div>
+            </div>
+          )}
 
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}

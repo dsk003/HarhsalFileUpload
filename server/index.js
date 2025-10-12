@@ -117,8 +117,32 @@ app.post('/api/auth/signup', async (req, res) => {
 
     if (error) {
       console.error('Signup error:', error);
+      console.error('Signup error details:', {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        username: username,
+        email: email
+      });
+      
+      // More specific error messages
+      if (error.message?.includes('User already registered')) {
+        return res.status(400).json({ 
+          error: 'Username already exists',
+          hint: 'Try logging in or use a different username'
+        });
+      }
+      
+      if (error.message?.includes('Email rate limit exceeded')) {
+        return res.status(429).json({ 
+          error: 'Too many signup attempts',
+          hint: 'Please wait a few minutes before trying again'
+        });
+      }
+      
       return res.status(400).json({ 
-        error: error.message || 'Failed to create account' 
+        error: error.message || 'Failed to create account',
+        hint: 'Check that email confirmation is disabled in Supabase settings'
       });
     }
 
@@ -163,8 +187,32 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (error) {
       console.error('Login error:', error);
+      console.error('Login error details:', {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        username: username,
+        attempted_email: email
+      });
+      
+      // More specific error messages
+      if (error.message?.includes('Email not confirmed')) {
+        return res.status(401).json({ 
+          error: 'Please confirm your email address',
+          hint: 'Check your email for confirmation link'
+        });
+      }
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        return res.status(401).json({ 
+          error: 'Invalid username or password',
+          hint: 'If you created an account before, you may need to sign up again due to recent updates'
+        });
+      }
+      
       return res.status(401).json({ 
-        error: 'Invalid username or password' 
+        error: 'Invalid username or password',
+        details: error.message
       });
     }
 

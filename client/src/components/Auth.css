@@ -93,6 +93,16 @@
   border: 1px solid #fcc;
 }
 
+.error-hint {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  background: #fffbf0;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ffd;
+}
+
 .auth-button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
