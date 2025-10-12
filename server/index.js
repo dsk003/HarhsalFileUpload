@@ -271,45 +271,56 @@ app.post('/api/checkout/create', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.id;
     const username = req.user.user_metadata?.username || req.user.email.split('@')[0];
-    const { productId, quantity = 1 } = req.body;
+    const userEmail = req.user.email;
 
     // Get Dodo Payments configuration
     const dodoApiKey = process.env.DODO_API_KEY;
-    const dodoProductId = productId || process.env.DODO_PRODUCT_ID;
-    const successUrl = process.env.DODO_SUCCESS_URL || `${req.protocol}://${req.get('host')}/payment-success`;
-    const cancelUrl = process.env.DODO_CANCEL_URL || `${req.protocol}://${req.get('host')}`;
+    const dodoProductId = process.env.DODO_PRODUCT_ID;
+    const returnUrl = process.env.DODO_SUCCESS_URL || `${req.protocol}://${req.get('host')}/payment-success`;
 
     if (!dodoApiKey) {
       return res.status(500).json({ 
         error: 'Payment configuration missing',
-        message: 'DODO_API_KEY not configured'
+        message: 'DODO_API_KEY not configured in environment variables'
       });
     }
 
     if (!dodoProductId) {
-      return res.status(400).json({ 
-        error: 'Product ID required',
-        message: 'Please provide a product ID'
+      return res.status(500).json({ 
+        error: 'Product configuration missing',
+        message: 'DODO_PRODUCT_ID not configured in environment variables'
       });
     }
 
-    // Create checkout session with Dodo Payments
+    // Create checkout session with Dodo Payments - using correct API format
     const checkoutPayload = {
-      product_id: dodoProductId,
-      quantity: quantity,
+      // Products to sell - using product_cart array format
+      product_cart: [
+        {
+          product_id: dodoProductId,
+          quantity: 1
+        }
+      ],
+      
+      // Pre-fill customer information
       customer: {
-        email: req.user.email,
+        email: userEmail,
         name: username
       },
+      
+      // Return URL after successful payment
+      return_url: returnUrl,
+      
+      // Custom metadata for tracking
       metadata: {
         user_id: userId,
-        username: username
-      },
-      success_url: successUrl,
-      cancel_url: cancelUrl
+        username: username,
+        timestamp: new Date().toISOString()
+      }
     };
 
-    console.log('Creating Dodo Payments checkout session:', checkoutPayload);
+    console.log('Creating Dodo Payments checkout session for user:', username);
+    console.log('Product ID:', dodoProductId);
 
     const response = await fetch('https://test.dodopayments.com/checkouts', {
       method: 'POST',
@@ -322,25 +333,30 @@ app.post('/api/checkout/create', verifyAuth, async (req, res) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Dodo Payments error:', errorData);
+      console.error('Dodo Payments API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      
       return res.status(response.status).json({ 
         error: 'Failed to create checkout session',
-        details: errorData.message || 'Payment provider error'
+        details: errorData.message || errorData.error || 'Payment provider error',
+        hint: 'Check your DODO_API_KEY and DODO_PRODUCT_ID are correct'
       });
     }
 
     const checkoutData = await response.json();
 
-    // Store payment session in metadata for tracking
-    console.log('Checkout session created:', {
-      checkout_id: checkoutData.id,
+    console.log('✅ Checkout session created successfully:', {
+      session_id: checkoutData.session_id,
       user_id: userId,
       username: username
     });
 
     res.json({
-      checkoutUrl: checkoutData.url || checkoutData.checkout_url,
-      sessionId: checkoutData.id,
+      checkoutUrl: checkoutData.checkout_url,
+      sessionId: checkoutData.session_id,
       message: 'Checkout session created successfully'
     });
 

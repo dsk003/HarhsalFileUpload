@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import './PaymentButton.css'
 
-function PaymentButton({ productId, quantity = 1, buttonText = 'Subscribe / Pay' }) {
+function PaymentButton({ buttonText = 'Upgrade to Premium ✨' }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { token, isAuthenticated } = useAuth()
@@ -20,10 +20,7 @@ function PaymentButton({ productId, quantity = 1, buttonText = 'Subscribe / Pay'
 
     try {
       // Create checkout session with explicit auth header
-      const response = await axios.post('/api/checkout/create', {
-        productId,
-        quantity
-      }, {
+      const response = await axios.post('/api/checkout/create', {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

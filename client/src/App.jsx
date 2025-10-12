@@ -37,10 +37,9 @@ function MainApp() {
           </div>
         </header>
         
-        {/* Payment Button - Add productId from Dodo Payments dashboard */}
+        {/* Upgrade to Premium Button */}
         <PaymentButton 
-          productId={null}  // Will use DODO_PRODUCT_ID from env
-          buttonText="Subscribe / Pay"
+          buttonText="Upgrade to Premium ✨"
         />
         
         <FileUpload onUploadSuccess={handleUploadSuccess} />
