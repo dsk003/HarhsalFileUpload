@@ -11,6 +11,18 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(cors());
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: '🚀 File Upload API is running!',
+    endpoints: {
+      health: '/api/health',
+      upload: 'POST /api/upload',
+      files: '/api/files'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
