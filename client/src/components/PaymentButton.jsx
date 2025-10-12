@@ -1,30 +1,18 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { useAuth } from '../context/AuthContext'
 import './PaymentButton.css'
 
 function PaymentButton({ buttonText = 'Upgrade to Premium ✨' }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { token, isAuthenticated } = useAuth()
 
   const handlePayment = async () => {
-    // Check authentication first
-    if (!isAuthenticated || !token) {
-      setError('Please log in to make a payment')
-      return
-    }
-
     setLoading(true)
     setError('')
 
     try {
-      // Create checkout session with explicit auth header
-      const response = await axios.post('/api/checkout/create', {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      // Create checkout session - token is automatically included by axios interceptor
+      const response = await axios.post('/api/checkout/create', {})
 
       const { checkoutUrl, sessionId } = response.data
 
@@ -43,11 +31,20 @@ function PaymentButton({ buttonText = 'Upgrade to Premium ✨' }) {
 
     } catch (err) {
       console.error('Payment error:', err)
-      setError(
-        err.response?.data?.error || 
-        err.response?.data?.message || 
-        'Failed to initiate payment. Please try again.'
-      )
+      
+      // Handle different error scenarios
+      if (err.response?.status === 401) {
+        setError('Session expired. Please refresh the page and try again.')
+      } else if (err.response?.status === 500) {
+        const details = err.response?.data?.details || err.response?.data?.message
+        setError(details || 'Payment configuration error. Please check server settings.')
+      } else {
+        setError(
+          err.response?.data?.error || 
+          err.response?.data?.message || 
+          'Failed to initiate payment. Please try again.'
+        )
+      }
     } finally {
       setLoading(false)
     }
