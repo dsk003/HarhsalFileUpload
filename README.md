@@ -5,6 +5,7 @@ A modern, full-stack web application for uploading files to Supabase Storage. Bu
 ## Features
 
 - 🔐 **Authentication** - Secure username/password login system
+- 💳 **Payment Integration** - Dodo Payments checkout for subscriptions/purchases
 - 📤 **Drag & Drop Upload** - Intuitive file upload with drag-and-drop support
 - 🎨 **Modern UI** - Beautiful, responsive design with smooth animations
 - 📁 **Any File Type** - Upload images, videos, PDFs, documents, and more
@@ -13,6 +14,7 @@ A modern, full-stack web application for uploading files to Supabase Storage. Bu
 - 📊 **File Management** - View all uploaded files with metadata
 - 🔄 **Real-time Updates** - File list updates automatically after uploads
 - 🛡️ **Protected Routes** - All file operations require authentication
+- 👤 **User Mapping** - Payments automatically linked to logged-in users
 
 ## Tech Stack
 
@@ -93,6 +95,7 @@ PORT=3001
 - Replace `your_actual_supabase_service_role_key` with your **service_role** key from Supabase
 - ⚠️ **Must use service_role key**, not anon public key, for authentication to work
 - Get it from: Supabase Dashboard → Settings → API → service_role key
+- Add your Dodo Payments credentials for payment functionality (see PAYMENT_SETUP.md)
 
 ## Running the Application
 
@@ -281,6 +284,7 @@ file-upload-app/
 ├── .gitignore
 ├── AUTH_SETUP.md         # Authentication setup guide
 ├── SUPABASE_SETUP.md     # Storage setup guide
+├── PAYMENT_SETUP.md      # Dodo Payments integration guide
 ├── package.json
 └── README.md
 ```
@@ -321,6 +325,19 @@ Make sure you've created a `.env` file with your Supabase credentials and servic
 ### For detailed setup guides:
 - **Authentication**: See `AUTH_SETUP.md`
 - **Storage**: See `SUPABASE_SETUP.md`
+- **Payments**: See `PAYMENT_SETUP.md`
+
+### Payment Issues
+
+#### "Payment configuration missing"
+- Add `DODO_API_KEY` to environment variables
+- Add `DODO_PRODUCT_ID` to environment variables
+- Get these from Dodo Payments dashboard (see PAYMENT_SETUP.md)
+
+#### Payment button not working
+- Check that you're logged in (authentication required)
+- Verify Dodo Payments API key is correct
+- Check browser console and server logs for errors
 
 ## Security Notes
 

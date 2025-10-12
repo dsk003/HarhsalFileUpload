@@ -216,6 +216,191 @@ app.post('/api/auth/logout', async (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+// ========== PAYMENT ENDPOINTS ==========
+
+// Create checkout session endpoint (protected)
+app.post('/api/checkout/create', verifyAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const username = req.user.user_metadata?.username || req.user.email.split('@')[0];
+    const { productId, quantity = 1 } = req.body;
+
+    // Get Dodo Payments configuration
+    const dodoApiKey = process.env.DODO_API_KEY;
+    const dodoProductId = productId || process.env.DODO_PRODUCT_ID;
+    const successUrl = process.env.DODO_SUCCESS_URL || `${req.protocol}://${req.get('host')}/payment-success`;
+    const cancelUrl = process.env.DODO_CANCEL_URL || `${req.protocol}://${req.get('host')}`;
+
+    if (!dodoApiKey) {
+      return res.status(500).json({ 
+        error: 'Payment configuration missing',
+        message: 'DODO_API_KEY not configured'
+      });
+    }
+
+    if (!dodoProductId) {
+      return res.status(400).json({ 
+        error: 'Product ID required',
+        message: 'Please provide a product ID'
+      });
+    }
+
+    // Create checkout session with Dodo Payments
+    const checkoutPayload = {
+      product_id: dodoProductId,
+      quantity: quantity,
+      customer: {
+        email: req.user.email,
+        name: username
+      },
+      metadata: {
+        user_id: userId,
+        username: username
+      },
+      success_url: successUrl,
+      cancel_url: cancelUrl
+    };
+
+    console.log('Creating Dodo Payments checkout session:', checkoutPayload);
+
+    const response = await fetch('https://test.dodopayments.com/checkouts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${dodoApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(checkoutPayload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Dodo Payments error:', errorData);
+      return res.status(response.status).json({ 
+        error: 'Failed to create checkout session',
+        details: errorData.message || 'Payment provider error'
+      });
+    }
+
+    const checkoutData = await response.json();
+
+    // Store payment session in metadata for tracking
+    console.log('Checkout session created:', {
+      checkout_id: checkoutData.id,
+      user_id: userId,
+      username: username
+    });
+
+    res.json({
+      checkoutUrl: checkoutData.url || checkoutData.checkout_url,
+      sessionId: checkoutData.id,
+      message: 'Checkout session created successfully'
+    });
+
+  } catch (error) {
+    console.error('Checkout creation error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// Payment verification endpoint (for post-payment confirmation)
+app.get('/api/payment/verify/:sessionId', verifyAuth, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.id;
+
+    const dodoApiKey = process.env.DODO_API_KEY;
+
+    if (!dodoApiKey) {
+      return res.status(500).json({ 
+        error: 'Payment configuration missing'
+      });
+    }
+
+    // Verify payment session with Dodo Payments
+    const response = await fetch(`https://test.dodopayments.com/checkouts/${sessionId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${dodoApiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ 
+        error: 'Failed to verify payment'
+      });
+    }
+
+    const paymentData = await response.json();
+
+    res.json({
+      verified: paymentData.status === 'completed' || paymentData.status === 'paid',
+      status: paymentData.status,
+      payment: paymentData
+    });
+
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// Webhook endpoint for payment notifications (not protected - validates signature)
+app.post('/api/webhooks/payment', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    // Get the webhook signature from headers
+    const signature = req.headers['x-dodo-signature'];
+    
+    // Parse the webhook payload
+    const event = JSON.parse(req.body.toString());
+
+    console.log('Received payment webhook:', {
+      type: event.type,
+      data: event.data
+    });
+
+    // Handle different webhook events
+    switch (event.type) {
+      case 'checkout.completed':
+      case 'payment.succeeded':
+        const paymentData = event.data;
+        const userId = paymentData.metadata?.user_id;
+        const username = paymentData.metadata?.username;
+
+        console.log('Payment successful for user:', {
+          user_id: userId,
+          username: username,
+          payment_id: paymentData.id
+        });
+
+        // Here you can update user's payment status in your database
+        // For example, mark user as premium, add credits, etc.
+
+        break;
+
+      case 'checkout.cancelled':
+      case 'payment.failed':
+        console.log('Payment cancelled/failed:', event.data);
+        break;
+
+      default:
+        console.log('Unhandled webhook event:', event.type);
+    }
+
+    res.json({ received: true });
+
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(400).json({ error: 'Webhook processing failed' });
+  }
+});
+
 // Upload endpoint (protected)
 app.post('/api/upload', verifyAuth, upload.single('file'), async (req, res) => {
   try {
