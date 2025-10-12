@@ -294,7 +294,7 @@ app.post('/api/checkout/create', verifyAuth, async (req, res) => {
 
     // Create checkout session with Dodo Payments - using correct API format
     const checkoutPayload = {
-      // Products to sell - using product_cart array format
+      // Products to sell - use IDs from your Dodo Payments dashboard
       product_cart: [
         {
           product_id: dodoProductId,
@@ -302,19 +302,31 @@ app.post('/api/checkout/create', verifyAuth, async (req, res) => {
         }
       ],
       
-      // Pre-fill customer information
+      // Pre-fill customer information to reduce checkout friction
       customer: {
         email: userEmail,
-        name: username
+        name: username,
+        phone_number: req.body.phone_number || '' // Optional: can be added from user profile
       },
       
-      // Return URL after successful payment
+      // Billing address for tax calculation and compliance (optional)
+      // billing_address: {
+      //   street: '123 Main St',
+      //   city: 'San Francisco',
+      //   state: 'CA',
+      //   country: 'US', // Required: ISO 3166-1 alpha-2 country code
+      //   zipcode: '94102'
+      // },
+      
+      // Where to redirect after successful payment
       return_url: returnUrl,
       
-      // Custom metadata for tracking
+      // Custom data for your internal tracking
       metadata: {
         user_id: userId,
         username: username,
+        order_id: `order_${Date.now()}`,
+        source: 'web_app',
         timestamp: new Date().toISOString()
       }
     };
