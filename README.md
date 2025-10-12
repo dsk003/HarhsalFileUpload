@@ -1,181 +1,91 @@
-# File Upload Center
+# File Upload App
 
-A modern full-stack web application for uploading files to Supabase storage. Built with React, Express, and Supabase.
+Upload any file to Supabase storage with a beautiful drag-and-drop interface.
 
-## Features
+## 🚀 Deploy to Render (SUPER SIMPLE)
 
-- 🎨 Beautiful UI with drag-and-drop support
-- 📁 Upload images, videos, PDFs, documents, and more
-- ☁️ Secure file storage using Supabase
-- 📊 Real-time upload progress tracking
-- 🚀 Ready for deployment on Render
+### Backend (This Repository):
+1. Go to https://dashboard.render.com/
+2. Click **"New +"** → **"Web Service"**
+3. Connect this repository: `Harryphied/Storage`
+4. Settings:
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+5. Add Environment Variables:
+   - **SUPABASE_API_KEY**: `your_api_key_here`
+   - **SUPABASE_STORAGE_URL**: `https://hfvezfqtlyegograuxqa.storage.supabase.co/storage/v1/s3`
+6. Click **"Create Web Service"**
+7. ✅ Done! Copy your backend URL
 
-## Project Structure
+### Frontend (Separate Deployment):
+1. Click **"New +"** → **"Static Site"**
+2. Connect this repository: `Harryphied/Storage`
+3. Settings:
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+4. Add Environment Variable:
+   - **VITE_API_URL**: `your_backend_url_from_above`
+5. Click **"Create Static Site"**
+6. ✅ Done!
+
+## 📁 Project Structure
 
 ```
 Storage/
-├── frontend/          # React + Vite frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── package.json
-│
-├── backend/           # Express server
-│   ├── server.js
-│   └── package.json
-│
-├── README.md
-└── RENDER_DEPLOYMENT.md    # Detailed deployment guide
+├── server.js              # Backend server (in root)
+├── package.json           # Backend dependencies
+├── .env.example          # Environment variables template
+└── frontend/             # React frontend
+    ├── src/
+    └── package.json
 ```
 
-## Getting Started
+## 🔧 Run Locally
 
-### Prerequisites
-
-- Node.js 16+ and npm
-- Supabase account with storage bucket
-- Supabase API key
-
-### Installation
-
-**1. Clone the repository:**
-
+**Backend:**
 ```bash
-git clone https://github.com/Harryphied/Storage.git
-cd Storage
-```
-
-**2. Set up the backend:**
-
-```bash
-cd backend
 npm install
+# Create .env file with SUPABASE_API_KEY
+npm start
 ```
 
-Create a `.env` file in the backend directory:
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the root directory:
 
 ```env
-SUPABASE_API_KEY=your_supabase_api_key_here
+SUPABASE_API_KEY=your_supabase_api_key
 SUPABASE_STORAGE_URL=https://hfvezfqtlyegograuxqa.storage.supabase.co/storage/v1/s3
 PORT=3001
 ```
 
-**3. Set up the frontend:**
+## 📖 API Endpoints
 
-```bash
-cd ../frontend
-npm install
-```
+- `GET /api/health` - Health check
+- `POST /api/upload` - Upload a file (multipart/form-data)
 
-### Running Locally
+## 🔑 Get Supabase API Key
 
-**Terminal 1 - Start the backend server:**
+1. Go to https://supabase.com
+2. Create/open your project
+3. Go to **Storage** → Create bucket "uploads"
+4. Go to **Settings** → **API** 
+5. Copy the **service_role** key
 
-```bash
-cd backend
-npm start
-```
+## Technologies
 
-The backend will run on `http://localhost:3001`
-
-**Terminal 2 - Start the frontend development server:**
-
-```bash
-cd frontend
-npm run dev
-```
-
-The frontend will run on `http://localhost:3000`
-
-Open your browser and navigate to `http://localhost:3000`
-
-## Deployment to Render
-
-⚠️ **IMPORTANT**: This project requires deploying TWO separate services on Render.
-
-### Quick Steps:
-
-1. **Deploy Backend** (Web Service)
-   - Root Directory: **`backend`**
-   - Build: `npm install`
-   - Start: `npm start`
-   - Add `SUPABASE_API_KEY` environment variable
-
-2. **Deploy Frontend** (Static Site)
-   - Root Directory: **`frontend`**
-   - Build: `npm install && npm run build`
-   - Publish: `dist`
-   - Add `VITE_API_URL` environment variable (your backend URL)
-
-📖 **See [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md) for detailed step-by-step instructions.**
-
-## Supabase Setup
-
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Go to **Storage** section
-3. Create a new bucket called **"uploads"**
-4. Set bucket permissions (public or private based on your needs)
-5. Go to **Settings** → **API**
-6. Copy your **service_role** key (keep it secret!)
-7. Add the key to your environment variables
-
-## API Endpoints
-
-### POST /api/upload
-Upload a file to Supabase storage.
-
-**Request:**
-- Method: `POST`
-- Content-Type: `multipart/form-data`
-- Body: Form data with `file` field
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "File uploaded successfully",
-  "filename": "1234567890_example.jpg",
-  "originalName": "example.jpg",
-  "size": 1024000,
-  "mimeType": "image/jpeg",
-  "url": "https://..."
-}
-```
-
-### GET /api/health
-Health check endpoint.
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "message": "Server is running"
-}
-```
-
-## Technologies Used
-
-- **Frontend**: React 18, Vite
 - **Backend**: Node.js, Express, Multer
-- **Storage**: Supabase Storage
-- **Deployment**: Render
-
-## Troubleshooting
-
-### "Could not read package.json" on Render
-**Solution**: Make sure you set the **Root Directory** to `backend` or `frontend` in Render's service settings.
-
-### CORS errors
-**Solution**: Verify that `VITE_API_URL` in your frontend environment variables matches your backend URL.
-
-### Upload fails with "API key not configured"
-**Solution**: Check that `SUPABASE_API_KEY` is set in your backend's environment variables on Render.
+- **Frontend**: React, Vite
+- **Storage**: Supabase
 
 ## License
 
 ISC
-
-## Repository
-
-[https://github.com/Harryphied/Storage](https://github.com/Harryphied/Storage)
