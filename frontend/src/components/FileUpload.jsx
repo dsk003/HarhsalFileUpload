@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import './FileUpload.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Use relative URL since frontend is served by same server as backend
+const API_URL = '';
 
 function FileUpload({ onUploadSuccess }) {
   const [selectedFile, setSelectedFile] = useState(null);

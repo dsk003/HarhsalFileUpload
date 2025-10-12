@@ -3,6 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const axios = require('axios');
 const FormData = require('form-data');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -11,17 +12,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(cors());
 app.use(express.json());
 
-// Root route
-app.get('/', (req, res) => {
-  res.json({ 
-    message: '🚀 File Upload API is running!',
-    endpoints: {
-      health: '/api/health',
-      upload: 'POST /api/upload',
-      files: '/api/files'
-    }
-  });
-});
+// Serve static files from frontend build
+app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -113,6 +105,11 @@ app.get('/api/files', async (req, res) => {
       details: error.response?.data || error.message,
     });
   }
+});
+
+// Serve React app for all other routes (must be last)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3001;

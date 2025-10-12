@@ -1,65 +1,56 @@
 # File Upload App
 
-Upload any file to Supabase storage with a beautiful drag-and-drop interface.
+Upload any file to Supabase storage with a beautiful drag-and-drop interface. **Everything runs as a single Web Service!**
 
-## 🚀 Deploy to Render (SUPER SIMPLE)
+## 🚀 Deploy to Render (ONE Web Service)
 
-### Backend (This Repository):
-1. Go to https://dashboard.render.com/
-2. Click **"New +"** → **"Web Service"**
-3. Connect this repository: `Harryphied/Storage`
-4. Settings:
-   - **Build Command**: `npm install`
+1. **Go to Render**: https://dashboard.render.com/
+
+2. **Click "New +"** → **"Web Service"**
+
+3. **Connect Repository**: `Harryphied/Storage`
+
+4. **Configure**:
+   - **Build Command**: `chmod +x build.sh && ./build.sh`
    - **Start Command**: `npm start`
-5. Add Environment Variables:
-   - **SUPABASE_API_KEY**: `your_api_key_here`
-   - **SUPABASE_STORAGE_URL**: `https://hfvezfqtlyegograuxqa.storage.supabase.co/storage/v1/s3`
-6. Click **"Create Web Service"**
-7. ✅ Done! Copy your backend URL
 
-### Frontend (Separate Deployment):
-1. Click **"New +"** → **"Static Site"**
-2. Connect this repository: `Harryphied/Storage`
-3. Settings:
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm install && npm run build`
-   - **Publish Directory**: `dist`
-4. Add Environment Variable:
-   - **VITE_API_URL**: `your_backend_url_from_above`
-5. Click **"Create Static Site"**
-6. ✅ Done!
+5. **Add Environment Variables**:
+   - `SUPABASE_API_KEY` = your_supabase_api_key
+   - `SUPABASE_STORAGE_URL` = `https://hfvezfqtlyegograuxqa.storage.supabase.co/storage/v1/s3`
 
-## 📁 Project Structure
+6. **Click "Create Web Service"**
 
-```
-Storage/
-├── server.js              # Backend server (in root)
-├── package.json           # Backend dependencies
-├── .env.example          # Environment variables template
-└── frontend/             # React frontend
-    ├── src/
-    └── package.json
-```
+7. ✅ **Done!** Visit your URL to see the upload UI!
+
+---
+
+## 📁 How It Works
+
+- Backend serves the React frontend from `/frontend/dist`
+- API endpoints at `/api/*`
+- Everything runs on ONE service, ONE URL!
 
 ## 🔧 Run Locally
 
-**Backend:**
+**First time setup:**
 ```bash
+# Install backend
 npm install
-# Create .env file with SUPABASE_API_KEY
+
+# Install and build frontend
+npm run build
+```
+
+**Start the server:**
+```bash
 npm start
 ```
 
-**Frontend:**
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Visit `http://localhost:3001`
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file:
 
 ```env
 SUPABASE_API_KEY=your_supabase_api_key
@@ -69,8 +60,9 @@ PORT=3001
 
 ## 📖 API Endpoints
 
+- `GET /` - Serves the React UI
 - `GET /api/health` - Health check
-- `POST /api/upload` - Upload a file (multipart/form-data)
+- `POST /api/upload` - Upload a file
 
 ## 🔑 Get Supabase API Key
 
@@ -85,6 +77,7 @@ PORT=3001
 - **Backend**: Node.js, Express, Multer
 - **Frontend**: React, Vite
 - **Storage**: Supabase
+- **Deployment**: Single Render Web Service
 
 ## License
 
