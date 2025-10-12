@@ -1,0 +1,33 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: file-upload-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SUPABASE_STORAGE_URL
+        value: https://hfvezfqtlyegograuxqa.storage.supabase.co/storage/v1/s3
+      - key: SUPABASE_API_KEY
+        sync: false  # This will prompt you to add it manually in Render dashboard
+    healthCheckPath: /api/health
+
+  # Frontend Static Site
+  - type: web
+    name: file-upload-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: file-upload-backend
+          envVarKey: RENDER_EXTERNAL_URL
+
