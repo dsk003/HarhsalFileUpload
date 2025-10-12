@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,8 +20,15 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from the React app in production
+const distPath = path.join(__dirname, '../client/dist');
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    console.log('✅ Serving static files from:', distPath);
+  } else {
+    console.warn('⚠️  Warning: Client dist folder not found at:', distPath);
+    console.warn('⚠️  Make sure to run "npm run build" before starting in production mode');
+  }
 }
 
 // Initialize Supabase client
@@ -146,12 +154,26 @@ app.get('/api/files', async (req, res) => {
 // Serve React app for all other routes in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    const indexPath = path.join(__dirname, '../client/dist/index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(503).json({ 
+        error: 'Application not built',
+        message: 'The frontend application has not been built yet. Please run "npm run build" first.',
+        hint: 'On Render, make sure your Build Command is set to: npm install && npm run build'
+      });
+    }
   });
 }
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📦 Supabase bucket: ${supabaseBucket}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.NODE_ENV === 'production' && !fs.existsSync(distPath)) {
+    console.error('❌ ERROR: Production mode but client/dist not found!');
+    console.error('   Run "npm run build" to build the frontend.');
+  }
 });
 

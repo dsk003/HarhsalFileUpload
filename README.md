@@ -125,9 +125,11 @@ git commit -m "Initial commit"
 2. Click **New +** and select **Web Service**
 3. Connect your repository
 4. Configure the service:
-   - **Name:** Your app name
-   - **Environment:** Node
-   - **Build Command:** `npm install && cd client && npm install && npm run build && cd ..`
+   - **Name:** Your app name (e.g., `file-upload-app`)
+   - **Environment:** `Node`
+   - **Region:** Choose closest to you
+   - **Branch:** `main`
+   - **Build Command:** `npm install && npm run build`
    - **Start Command:** `npm start`
    - **Instance Type:** Free or paid tier
 
