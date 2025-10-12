@@ -11,8 +11,21 @@ function PaymentButton({ buttonText = 'Upgrade to Premium ✨' }) {
     setError('')
 
     try {
-      // Create checkout session - token is automatically included by axios interceptor
-      const response = await axios.post('/api/checkout/create', {})
+      // Get token from localStorage
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        setError('Please log in again to continue')
+        setLoading(false)
+        return
+      }
+
+      // Create checkout session with explicit token
+      const response = await axios.post('/api/checkout/create', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
 
       const { checkoutUrl, sessionId } = response.data
 
