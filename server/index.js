@@ -81,7 +81,10 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       console.error('Supabase upload error:', error);
       return res.status(500).json({ 
         error: 'Failed to upload file to storage',
-        details: error.message 
+        details: error.message,
+        errorCode: error.statusCode || error.error,
+        bucket: supabaseBucket,
+        hint: 'Check if the bucket exists and has correct permissions in Supabase Storage'
       });
     }
 
