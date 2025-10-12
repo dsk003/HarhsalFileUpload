@@ -1,20 +1,32 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { useAuth } from '../context/AuthContext'
 import './PaymentButton.css'
 
 function PaymentButton({ productId, quantity = 1, buttonText = 'Subscribe / Pay' }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { token, isAuthenticated } = useAuth()
 
   const handlePayment = async () => {
+    // Check authentication first
+    if (!isAuthenticated || !token) {
+      setError('Please log in to make a payment')
+      return
+    }
+
     setLoading(true)
     setError('')
 
     try {
-      // Create checkout session
+      // Create checkout session with explicit auth header
       const response = await axios.post('/api/checkout/create', {
         productId,
         quantity
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       const { checkoutUrl, sessionId } = response.data
@@ -63,7 +75,14 @@ function PaymentButton({ productId, quantity = 1, buttonText = 'Subscribe / Pay'
       
       {error && (
         <div className="payment-error">
-          {error}
+          <span>{error}</span>
+          <button 
+            onClick={() => setError('')} 
+            className="error-dismiss"
+            aria-label="Dismiss error"
+          >
+            ×
+          </button>
         </div>
       )}
       
