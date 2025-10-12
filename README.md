@@ -45,7 +45,7 @@ Before you begin, ensure you have the following installed:
    - Go to **Authentication** → **Providers**
    - Ensure **Email** provider is enabled
    - Go to **Authentication** → **Settings**
-   - **Disable** "Enable email confirmations" (we use username@fileupload.local format)
+   - **Disable** "Enable email confirmations" or "Confirm email" (we use username@fileupload.app format)
 4. Get your API Key:
    - Go to **Settings** → **API**
    - Copy the **`service_role` secret key** (REQUIRED for auth to work)

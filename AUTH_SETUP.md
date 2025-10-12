@@ -29,12 +29,12 @@ The app now includes a complete username/password authentication system that:
 3. Make sure **Email** provider is enabled
 4. **IMPORTANT**: Disable email confirmation for username-based auth:
    - Go to **Authentication** → **Settings**
-   - Find **"Enable email confirmations"**
+   - Find **"Enable email confirmations"** or **"Confirm email"**
    - Turn it **OFF** (since we're using usernames, not real emails)
 
 ### Step 2: Configure Email Settings (Optional)
 
-Since we're using fake emails (username@fileupload.local), you can:
+Since we're using fake emails (username@fileupload.app), you can:
 - Leave SMTP settings unconfigured
 - Disable email confirmations (as mentioned above)
 - This allows instant account creation without email verification
@@ -94,9 +94,10 @@ Add these environment variables in Render:
 ### Username to Email Conversion
 
 Since Supabase requires email format for authentication, we:
-- Convert username → `username@fileupload.local`
+- Convert username → `username@fileupload.app`
 - Store actual username in user metadata
 - Display username (not email) in the UI
+- `.app` is a valid TLD so Supabase accepts the email format
 
 ## Security Features
 
@@ -133,7 +134,7 @@ Since Supabase requires email format for authentication, we:
 1. Go to Supabase Dashboard
 2. Click **Authentication** → **Users**
 3. You should see your test user
-4. Email will be `testuser@fileupload.local`
+4. Email will be `testuser@fileupload.app`
 
 ## Troubleshooting
 

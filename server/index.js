@@ -101,7 +101,8 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     // Create email from username (Supabase requires email format)
-    const email = `${username}@fileupload.local`;
+    // Using .app domain which is a valid TLD
+    const email = `${username}@fileupload.app`;
 
     const { data, error } = await supabase.auth.signUp({
       email: email,
@@ -152,7 +153,8 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Convert username to email format
-    const email = `${username}@fileupload.local`;
+    // Using .app domain which is a valid TLD
+    const email = `${username}@fileupload.app`;
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
