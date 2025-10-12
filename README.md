@@ -4,6 +4,7 @@ A modern, full-stack web application for uploading files to Supabase Storage. Bu
 
 ## Features
 
+- 🔐 **Authentication** - Secure username/password login system
 - 📤 **Drag & Drop Upload** - Intuitive file upload with drag-and-drop support
 - 🎨 **Modern UI** - Beautiful, responsive design with smooth animations
 - 📁 **Any File Type** - Upload images, videos, PDFs, documents, and more
@@ -11,6 +12,7 @@ A modern, full-stack web application for uploading files to Supabase Storage. Bu
 - 📱 **Responsive Design** - Works perfectly on desktop and mobile devices
 - 📊 **File Management** - View all uploaded files with metadata
 - 🔄 **Real-time Updates** - File list updates automatically after uploads
+- 🛡️ **Protected Routes** - All file operations require authentication
 
 ## Tech Stack
 
@@ -35,14 +37,26 @@ Before you begin, ensure you have the following installed:
 
 ## Supabase Setup
 
+### Authentication Setup
+
 1. Go to [Supabase](https://supabase.com) and create an account (if you don't have one)
 2. Create a new project
-3. Navigate to **Storage** in the left sidebar
-4. Create a new bucket called `uploads` (or any name you prefer)
-5. Set the bucket to **Public** if you want files to be publicly accessible
-6. Get your Supabase API Key:
+3. **Configure Authentication**:
+   - Go to **Authentication** → **Providers**
+   - Ensure **Email** provider is enabled
+   - Go to **Authentication** → **Settings**
+   - **Disable** "Enable email confirmations" (we use username@fileupload.local format)
+4. Get your API Key:
    - Go to **Settings** → **API**
-   - Copy the `anon` `public` key (or use the `service_role` key for server-side operations)
+   - Copy the **`service_role` secret key** (REQUIRED for auth to work)
+   - ⚠️ **Important**: Use service_role key, NOT the anon public key
+
+### Storage Setup
+
+1. Navigate to **Storage** in the left sidebar
+2. Create a new bucket called `uploads` (or any name you prefer)
+3. Set the bucket to **Public** if you want files to be publicly accessible
+4. Set bucket policies (see SUPABASE_SETUP.md for detailed instructions)
 
 ## Installation
 
@@ -70,12 +84,15 @@ cp .env.example .env
 2. Edit the `.env` file and add your Supabase credentials:
 ```env
 SUPABASE_URL=https://hfvezfqtlyegograuxqa.supabase.co
-SUPABASE_KEY=your_actual_supabase_api_key
+SUPABASE_KEY=your_actual_supabase_service_role_key
 SUPABASE_BUCKET=uploads
 PORT=3001
 ```
 
-**Important:** Replace `your_actual_supabase_api_key` with your actual Supabase API key.
+**Important:** 
+- Replace `your_actual_supabase_service_role_key` with your **service_role** key from Supabase
+- ⚠️ **Must use service_role key**, not anon public key, for authentication to work
+- Get it from: Supabase Dashboard → Settings → API → service_role key
 
 ## Running the Application
 
@@ -91,6 +108,14 @@ This will start:
 - Backend API server on `http://localhost:3001`
 
 The frontend is configured to proxy API requests to the backend automatically.
+
+**First Time Usage:**
+1. Open `http://localhost:3000` in your browser
+2. You'll see a login form
+3. Click "Sign up" to create an account
+4. Enter a username and password (min 6 characters)
+5. You'll be logged in automatically
+6. Start uploading files!
 
 ### Production Mode
 
@@ -138,10 +163,12 @@ git commit -m "Initial commit"
 In the Render dashboard, add the following environment variables:
 
 - `SUPABASE_URL`: `https://hfvezfqtlyegograuxqa.supabase.co`
-- `SUPABASE_KEY`: Your Supabase API key (from your Supabase dashboard)
+- `SUPABASE_KEY`: Your Supabase **service_role** key (⚠️ NOT anon key)
 - `SUPABASE_BUCKET`: `uploads` (or your bucket name)
 - `PORT`: `3001`
 - `NODE_ENV`: `production`
+
+**Important**: Must use service_role key for authentication to work!
 
 ### Step 4: Deploy
 
@@ -149,26 +176,66 @@ Click **Create Web Service** and Render will automatically deploy your app!
 
 ## API Endpoints
 
-### Health Check
-```
-GET /api/health
-```
-Returns server status.
+### Authentication Endpoints
 
-### Upload File
+#### Sign Up
+```
+POST /api/auth/signup
+Content-Type: application/json
+
+Body: { username: string, password: string }
+```
+Creates a new user account.
+
+#### Login
+```
+POST /api/auth/login
+Content-Type: application/json
+
+Body: { username: string, password: string }
+```
+Authenticates user and returns JWT token.
+
+#### Verify Session
+```
+GET /api/auth/verify
+Authorization: Bearer <token>
+```
+Verifies if the current session is valid.
+
+#### Logout
+```
+POST /api/auth/logout
+Authorization: Bearer <token>
+```
+Logs out the current user.
+
+### Protected Endpoints (Require Authentication)
+
+#### Upload File
 ```
 POST /api/upload
+Authorization: Bearer <token>
 Content-Type: multipart/form-data
 
 Body: { file: <file> }
 ```
-Uploads a file to Supabase Storage.
+Uploads a file to Supabase Storage. Requires valid JWT token.
 
-### List Files
+#### List Files
 ```
 GET /api/files
+Authorization: Bearer <token>
 ```
-Returns a list of all uploaded files with their metadata and URLs.
+Returns a list of all uploaded files with their metadata and URLs. Requires valid JWT token.
+
+### Public Endpoints
+
+#### Health Check
+```
+GET /api/health
+```
+Returns server status (no authentication required).
 
 ## File Size Limits
 
@@ -194,7 +261,12 @@ file-upload-app/
 │   │   │   ├── FileUpload.jsx
 │   │   │   ├── FileUpload.css
 │   │   │   ├── FileList.jsx
-│   │   │   └── FileList.css
+│   │   │   ├── FileList.css
+│   │   │   ├── Login.jsx
+│   │   │   ├── Signup.jsx
+│   │   │   └── Auth.css
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx
 │   │   ├── App.jsx
 │   │   ├── App.css
 │   │   ├── main.jsx
@@ -207,24 +279,48 @@ file-upload-app/
 ├── .env                   # Environment variables (not in git)
 ├── .env.example          # Example environment variables
 ├── .gitignore
+├── AUTH_SETUP.md         # Authentication setup guide
+├── SUPABASE_SETUP.md     # Storage setup guide
 ├── package.json
 └── README.md
 ```
 
 ## Troubleshooting
 
-### "SUPABASE_URL and SUPABASE_KEY must be set"
-Make sure you've created a `.env` file with your Supabase credentials.
+### Authentication Issues
 
-### Upload fails with "Failed to upload file to storage"
-- Check that your Supabase API key is correct
+#### "Failed to create account" or "Failed to login"
+- **Check API Key**: Must use **service_role** key, not anon public key
+- **Disable Email Confirmation**: Go to Supabase → Authentication → Settings → Disable email confirmation
+- **Check Password**: Must be at least 6 characters
+- **Verify Supabase Auth**: Make sure Email provider is enabled in Authentication → Providers
+
+#### Can't access file upload (stuck on login)
+- Clear browser localStorage
+- Check browser console for errors
+- Verify service_role key is set correctly
+- Check server logs for authentication errors
+
+### Storage Issues
+
+#### "SUPABASE_URL and SUPABASE_KEY must be set"
+Make sure you've created a `.env` file with your Supabase credentials and service_role key.
+
+#### Upload fails with "Failed to upload file to storage"
+- Check that your Supabase **service_role** key is correct
 - Verify that the bucket name matches your Supabase bucket
-- Ensure the bucket has the correct permissions (public or private)
+- Ensure the bucket has the correct permissions (see SUPABASE_SETUP.md)
+- Check bucket policies allow uploads
 
-### Files not appearing in the list
+#### Files not appearing in the list
 - Make sure the bucket name in `.env` matches your Supabase bucket
 - Check that files were uploaded successfully
 - Verify bucket permissions allow reading files
+- Check that you're logged in (authentication required)
+
+### For detailed setup guides:
+- **Authentication**: See `AUTH_SETUP.md`
+- **Storage**: See `SUPABASE_SETUP.md`
 
 ## Security Notes
 

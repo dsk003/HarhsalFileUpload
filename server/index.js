@@ -52,13 +52,170 @@ const upload = multer({
   }
 });
 
+// Middleware to verify authentication
+const verifyAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'No token provided' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token' });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Authentication failed' });
+  }
+};
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// Upload endpoint
-app.post('/api/upload', upload.single('file'), async (req, res) => {
+// ========== AUTHENTICATION ENDPOINTS ==========
+
+// Sign up endpoint
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ 
+        error: 'Username and password are required' 
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 6 characters long' 
+      });
+    }
+
+    // Create email from username (Supabase requires email format)
+    const email = `${username}@fileupload.local`;
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: {
+          username: username,
+          display_name: username
+        }
+      }
+    });
+
+    if (error) {
+      console.error('Signup error:', error);
+      return res.status(400).json({ 
+        error: error.message || 'Failed to create account' 
+      });
+    }
+
+    res.json({
+      message: 'Account created successfully',
+      user: {
+        id: data.user.id,
+        username: username,
+        email: data.user.email
+      },
+      session: data.session
+    });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// Login endpoint
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ 
+        error: 'Username and password are required' 
+      });
+    }
+
+    // Convert username to email format
+    const email = `${username}@fileupload.local`;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      console.error('Login error:', error);
+      return res.status(401).json({ 
+        error: 'Invalid username or password' 
+      });
+    }
+
+    res.json({
+      message: 'Login successful',
+      user: {
+        id: data.user.id,
+        username: username,
+        email: data.user.email
+      },
+      session: data.session
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// Verify session endpoint
+app.get('/api/auth/verify', verifyAuth, async (req, res) => {
+  res.json({
+    message: 'Session valid',
+    user: {
+      id: req.user.id,
+      username: req.user.user_metadata?.username || req.user.email.split('@')[0],
+      email: req.user.email
+    }
+  });
+});
+
+// Logout endpoint
+app.post('/api/auth/logout', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }
+
+  res.json({ message: 'Logged out successfully' });
+});
+
+// Upload endpoint (protected)
+app.post('/api/upload', verifyAuth, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -113,8 +270,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// List uploaded files
-app.get('/api/files', async (req, res) => {
+// List uploaded files (protected)
+app.get('/api/files', verifyAuth, async (req, res) => {
   try {
     const { data, error } = await supabase.storage
       .from(supabaseBucket)
