@@ -1,6 +1,6 @@
 # System Interconnection Map
 
-Complete audit of how Users, Authentication, Payments, and File Storage interconnect through Supabase.
+Complete audit of how Users, Authentication, and File Storage interconnect through Supabase.
 
 ## 🏗️ System Architecture
 
@@ -9,38 +9,37 @@ Complete audit of how Users, Authentication, Payments, and File Storage intercon
 │                    SUPABASE (Central Hub)                    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Auth DB    │  │   Storage    │  │  Payments*   │      │
-│  │  (users)     │  │  (uploads)   │  │  (proposed)  │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│         ↓                 ↓                   ↓              │
-│    User Data        File Metadata      Payment Records       │
-│    JWT Tokens       File URLs         Premium Status         │
+│  ┌──────────────┐  ┌──────────────┐                         │
+│  │   Auth DB    │  │   Storage    │                         │
+│  │  (users)     │  │  (uploads)   │                         │
+│  └──────────────┘  └──────────────┘                         │
+│         ↓                 ↓                                   │
+│    User Data        File Metadata                            │
+│    JWT Tokens       File URLs                                │
 └─────────────────────────────────────────────────────────────┘
-         ↓                 ↓                   ↓
+         ↓                 ↓
     ═════════════════════════════════════════════════
-         ↓                 ↓                   ↓
+         ↓                 ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                      YOUR BACKEND (Node.js)                  │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
-│  Authentication     File Operations      Payment Processing   │
-│  ↓                 ↓                     ↓                    │
-│  Verify Token      Upload File          Create Checkout      │
-│  Get User Info     List Files           Handle Webhooks      │
-│                                          (Track Payments)     │
+│  Authentication     File Operations                          │
+│  ↓                 ↓                                         │
+│  Verify Token      Upload File                              │
+│  Get User Info     List Files                               │
+│                                                               │
 └─────────────────────────────────────────────────────────────┘
-         ↓                                      ↓
+         ↓
     ═════════════════════════════════════════════════
-         ↓                                      ↓
-┌────────────────────────────┐    ┌────────────────────────────┐
-│   REACT FRONTEND           │    │   DODO PAYMENTS            │
-│                            │    │                            │
-│  - Login/Signup Forms      │    │  - Checkout Page           │
-│  - File Upload UI          │    │  - Payment Processing      │
-│  - Payment Button          │    │  - Webhooks to Backend     │
-│  - Premium Status Display  │    │                            │
-└────────────────────────────┘    └────────────────────────────┘
+         ↓
+┌────────────────────────────┐
+│   REACT FRONTEND           │
+│                            │
+│  - Login/Signup Forms      │
+│  - File Upload UI          │
+│                            │
+└────────────────────────────┘
 ```
 
 ## 🔐 Authentication Flow (Supabase-Based)
@@ -109,51 +108,6 @@ Complete audit of how Users, Authentication, Payments, and File Storage intercon
 
 **Key Point:** ✅ User ID always comes from Supabase, never generated locally
 
-## 💰 Payment Flow (Linked to Supabase User)
-
-### Payment Initiation
-```
-1. User (logged in) clicks "Upgrade to Premium"
-      ↓
-2. Frontend → Backend /api/checkout/create
-      Header: Authorization: Bearer {token}
-      ↓
-3. Backend verifies token with Supabase
-      Gets: req.user.id (Supabase UUID)
-            req.user.email
-            req.user.user_metadata.username
-      ↓
-4. Backend → Dodo Payments API
-      POST /checkouts
-      Body:
-        product_cart: [{ product_id, quantity }]
-        customer: {
-          email: req.user.email,  ← From Supabase
-          name: req.user.username ← From Supabase
-        }
-        metadata: {
-          user_id: req.user.id,   ← Supabase UUID ✅
-          username: req.user.username,
-          timestamp: ...
-        }
-      ↓
-5. Dodo Payments creates checkout session
-      Stores metadata with Supabase user_id
-      Returns: checkout_url
-      ↓
-6. User completes payment on Dodo
-      ↓
-7. Dodo Payments → Your Backend /api/webhooks/payment
-      Webhook includes:
-        metadata.user_id (Supabase UUID) ✅
-      ↓
-8. Backend can:
-      - Log payment ✅ Currently doing
-      - Save to Supabase ⚠️ NOT doing (recommended)
-```
-
-**Key Point:** ✅ Payment always linked to Supabase user.id
-
 ## 📁 File Upload Flow (Linked to Supabase User)
 
 ```
@@ -192,20 +146,9 @@ Complete audit of how Users, Authentication, Payments, and File Storage intercon
    - Stored in: Supabase Storage
    - Accessed by: Logged-in users (Supabase auth)
 
-3. **Payment Metadata**
-   - Includes: Supabase user.id
-   - Stored in: Dodo Payments
-   - Linked to: Supabase user via metadata
-
 ### ⚠️ What's NOT Connected (Gap)
 
-1. **Payment Status**
-   - Problem: Successful payments not saved to Supabase
-   - Impact: Can't query which users are premium
-   - Impact: Premium status doesn't persist
-   - Solution: Create payments table in Supabase (see SUPABASE_PAYMENT_SETUP.md)
-
-2. **File Ownership**
+1. **File Ownership**
    - Problem: Files not explicitly linked to users
    - Impact: Can't list "user's files" easily
    - Solution: Add user_id to file metadata or create files table
@@ -216,12 +159,6 @@ Complete audit of how Users, Authentication, Payments, and File Storage intercon
 - ✅ User accounts (auth.users)
 - ✅ User metadata (username, etc.)
 - ✅ File blobs (Supabase Storage)
-- ⚠️ Payment records (NOT YET - recommended)
-
-### Dodo Payments (External Service)
-- ✅ Payment transactions
-- ✅ Checkout sessions
-- ✅ User metadata (includes Supabase user_id)
 
 ### Browser localStorage (Client-Side Only)
 - ⚠️ JWT token (issued by Supabase, stored locally)
@@ -241,12 +178,6 @@ Complete audit of how Users, Authentication, Payments, and File Storage intercon
 - ✅ User ID from Supabase (UUID)
 - ✅ Works across devices
 
-### Payments
-- ✅ Linked to Supabase user.id
-- ✅ User info from Supabase
-- ✅ Metadata includes Supabase UUID
-- ⚠️ Payment status not saved to Supabase (gap)
-
 ### File Storage
 - ✅ Files in Supabase Storage
 - ✅ Access requires Supabase auth
@@ -254,24 +185,7 @@ Complete audit of how Users, Authentication, Payments, and File Storage intercon
 
 ## 🔧 Recommended Improvements
 
-### 1. Add Payments Table to Supabase (High Priority)
-```sql
-CREATE TABLE payments (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id),  ← Links to Supabase user
-  dodo_session_id TEXT,
-  status TEXT,
-  created_at TIMESTAMP
-);
-```
-
-**Benefits:**
-- Premium status persists across sessions
-- Can query payment history
-- Works on any device
-- Proper audit trail
-
-### 2. Add File Ownership Tracking (Medium Priority)
+### 1. Add File Ownership Tracking
 ```sql
 CREATE TABLE user_files (
   id UUID PRIMARY KEY,
@@ -293,8 +207,6 @@ CREATE TABLE user_files (
 - ✅ Authentication: 100% Supabase-based
 - ✅ User Identity: Always from Supabase
 - ✅ File Storage: In Supabase
-- ✅ Payment Metadata: Includes Supabase user_id
-- ⚠️ Payment Status: Not persisted to Supabase
 - ⚠️ File Ownership: Not explicitly tracked
 
 ### All Critical Data Flows Through Supabase
@@ -305,8 +217,5 @@ Every authenticated operation:
 4. Uses that ID for everything
 
 **Nothing is local-only** - All user data comes from and can be traced back to Supabase.
-
-### To Complete Full Interconnection
-Implement the payments table in Supabase (see SUPABASE_PAYMENT_SETUP.md) to close the payment status persistence gap.
 
 

@@ -1,20 +1,23 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import FileUpload from './components/FileUpload'
 import FileList from './components/FileList'
-import PaymentButton from './components/PaymentButton'
-import PaymentSuccess from './components/PaymentSuccess'
 import './App.css'
 
 function MainApp() {
   const [uploadTrigger, setUploadTrigger] = useState(0)
+  const [showPaymentMessage, setShowPaymentMessage] = useState(false)
   const { user, logout } = useAuth()
 
   const handleUploadSuccess = () => {
     setUploadTrigger(prev => prev + 1)
+  }
+
+  const handleUpgradeToPremium = () => {
+    setShowPaymentMessage(true)
+    setTimeout(() => setShowPaymentMessage(false), 3000)
   }
 
   return (
@@ -38,9 +41,20 @@ function MainApp() {
         </header>
         
         {/* Upgrade to Premium Button */}
-        <PaymentButton 
-          buttonText="Upgrade to Premium ✨"
-        />
+        <div className="payment-button-container">
+          <button 
+            onClick={handleUpgradeToPremium} 
+            className="payment-button"
+          >
+            Upgrade to Premium ✨
+          </button>
+          
+          {showPaymentMessage && (
+            <div className="payment-message">
+              Connect to payments
+            </div>
+          )}
+        </div>
         
         <FileUpload onUploadSuccess={handleUploadSuccess} />
         
@@ -75,13 +89,8 @@ function App() {
     )
   }
 
-  // Show main app with routing if authenticated
-  return (
-    <Routes>
-      <Route path="/" element={<MainApp />} />
-      <Route path="/payment-success" element={<PaymentSuccess />} />
-    </Routes>
-  )
+  // Show main app if authenticated
+  return <MainApp />
 }
 
 export default App
