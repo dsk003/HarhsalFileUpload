@@ -13,20 +13,25 @@ A modern, full-stack web application for uploading files to Supabase Storage. Bu
 - 📊 **File Management** - View all uploaded files with metadata
 - 🔄 **Real-time Updates** - File list updates automatically after uploads
 - 🛡️ **Protected Routes** - All file operations require authentication
+- 🏗️ **Clean Architecture** - Frontend is pure UI, all business logic in backend
+- ✅ **Backend Validation** - All input validation and sanitization on server
+- 🚀 **Single Build Command** - Optimized for Render deployment
 
 ## Tech Stack
 
-### Frontend
+### Frontend (Presentation Layer)
 - React 18
 - Vite (for fast development and building)
 - Axios (for HTTP requests)
 - Modern CSS with animations
+- **No business logic** - Pure UI components
 
-### Backend
+### Backend (Business Logic Layer)
 - Node.js
 - Express
 - Supabase JS Client
 - Multer (for file handling)
+- **All validation and external API calls**
 
 ## Prerequisites
 
@@ -318,9 +323,11 @@ Make sure you've created a `.env` file with your Supabase credentials and servic
 - Verify bucket permissions allow reading files
 - Check that you're logged in (authentication required)
 
-### For detailed setup guides:
+### For detailed guides:
+- **Architecture**: See `ARCHITECTURE.md` for complete system design
 - **Authentication**: See `AUTH_SETUP.md`
 - **Storage**: See `SUPABASE_SETUP.md`
+- **Deployment**: See `DEPLOY.md`
 
 ## Security Notes
 

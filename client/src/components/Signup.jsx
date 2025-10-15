@@ -15,14 +15,9 @@ function Signup({ onSwitchToLogin }) {
     setError('')
     setLoading(true)
 
+    // Minimal client-side validation for UX (backend is source of truth)
     if (!username || !password || !confirmPassword) {
       setError('Please fill in all fields')
-      setLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
       setLoading(false)
       return
     }
@@ -33,6 +28,7 @@ function Signup({ onSwitchToLogin }) {
       return
     }
 
+    // Let backend handle all validation logic
     const result = await signup(username, password)
     
     if (!result.success) {
@@ -70,7 +66,7 @@ function Signup({ onSwitchToLogin }) {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a password (min 6 characters)"
+              placeholder="Choose a password"
               disabled={loading}
               autoComplete="new-password"
             />

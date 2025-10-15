@@ -14,12 +14,14 @@ function Login({ onSwitchToSignup }) {
     setError('')
     setLoading(true)
 
+    // Minimal client-side validation for UX (backend is source of truth)
     if (!username || !password) {
       setError('Please fill in all fields')
       setLoading(false)
       return
     }
 
+    // Let backend handle all validation logic
     const result = await login(username, password)
     
     if (!result.success) {

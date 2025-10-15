@@ -88,29 +88,60 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // Input validation
     if (!username || !password) {
       return res.status(400).json({ 
         error: 'Username and password are required' 
       });
     }
 
+    // Sanitize username - remove special characters
+    const sanitizedUsername = username.trim();
+
+    // Validate username format
+    if (sanitizedUsername.length < 3) {
+      return res.status(400).json({ 
+        error: 'Username must be at least 3 characters long' 
+      });
+    }
+
+    if (sanitizedUsername.length > 30) {
+      return res.status(400).json({ 
+        error: 'Username must not exceed 30 characters' 
+      });
+    }
+
+    // Only allow alphanumeric and underscores
+    if (!/^[a-zA-Z0-9_]+$/.test(sanitizedUsername)) {
+      return res.status(400).json({ 
+        error: 'Username can only contain letters, numbers, and underscores' 
+      });
+    }
+
+    // Validate password
     if (password.length < 6) {
       return res.status(400).json({ 
         error: 'Password must be at least 6 characters long' 
       });
     }
 
+    if (password.length > 128) {
+      return res.status(400).json({ 
+        error: 'Password is too long' 
+      });
+    }
+
     // Create email from username (Supabase requires email format)
     // Using .app domain which is a valid TLD
-    const email = `${username}@fileupload.app`;
+    const email = `${sanitizedUsername}@fileupload.app`;
 
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
       options: {
         data: {
-          username: username,
-          display_name: username
+          username: sanitizedUsername,
+          display_name: sanitizedUsername
         }
       }
     });
@@ -150,7 +181,7 @@ app.post('/api/auth/signup', async (req, res) => {
       message: 'Account created successfully',
       user: {
         id: data.user.id,
-        username: username,
+        username: sanitizedUsername,
         email: data.user.email
       },
       session: data.session
@@ -170,15 +201,26 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // Input validation
     if (!username || !password) {
       return res.status(400).json({ 
         error: 'Username and password are required' 
       });
     }
 
+    // Sanitize username
+    const sanitizedUsername = username.trim();
+
+    // Basic validation
+    if (sanitizedUsername.length < 3 || sanitizedUsername.length > 30) {
+      return res.status(401).json({ 
+        error: 'Invalid username or password'
+      });
+    }
+
     // Convert username to email format
     // Using .app domain which is a valid TLD
-    const email = `${username}@fileupload.app`;
+    const email = `${sanitizedUsername}@fileupload.app`;
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
@@ -220,7 +262,7 @@ app.post('/api/auth/login', async (req, res) => {
       message: 'Login successful',
       user: {
         id: data.user.id,
-        username: username,
+        username: sanitizedUsername,
         email: data.user.email
       },
       session: data.session
