@@ -26,6 +26,7 @@ console.log('✅ Serving static files from:', publicPath);
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseKey;
 const supabaseBucket = process.env.SUPABASE_BUCKET || 'uploads';
 
 if (!supabaseUrl || !supabaseKey) {
@@ -33,7 +34,16 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1);
 }
 
+// Regular client for general operations
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Admin client with service role key for auth operations (bypasses RLS and email confirmation)
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -126,31 +136,22 @@ app.post('/api/auth/signup', async (req, res) => {
     // Create email from username (Supabase requires email format)
     const email = `${sanitizedUsername}@fileupload.app`;
 
-    const { data, error } = await supabase.auth.signUp({
+    // Use admin client to bypass email confirmation
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: password,
-      options: {
-        data: {
-          username: sanitizedUsername,
-          display_name: sanitizedUsername
-        },
-        emailRedirectTo: undefined
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        username: sanitizedUsername,
+        display_name: sanitizedUsername
       }
-    });
-
-    // Debug logging
-    console.log('Signup response:', {
-      hasUser: !!data?.user,
-      hasSession: !!data?.session,
-      userEmail: data?.user?.email,
-      error: error
     });
 
     if (error) {
       console.error('Signup error:', error);
       
       // More specific error messages
-      if (error.message?.includes('User already registered')) {
+      if (error.message?.includes('User already registered') || error.message?.includes('already been registered')) {
         return res.status(400).json({ 
           error: 'Username already exists',
           hint: 'Try logging in or use a different username'
@@ -165,51 +166,37 @@ app.post('/api/auth/signup', async (req, res) => {
       }
       
       return res.status(400).json({ 
-        error: error.message || 'Failed to create account',
-        hint: 'Check that email confirmation is disabled in Supabase settings'
+        error: error.message || 'Failed to create account'
       });
     }
 
-    // Check if session is null (email confirmation required)
-    if (!data.session) {
-      console.log('Session is null after signup - attempting auto-login...');
-      
-      // Try to immediately sign in with the credentials
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+    console.log('User created successfully, now signing in...');
+    
+    // Now sign in the user to get a session
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
 
-      if (loginError || !loginData.session) {
-        console.error('Auto-login failed:', loginError);
-        return res.status(400).json({
-          error: 'Account created but email confirmation required',
-          hint: 'Try logging in with your username and password',
-          details: 'User was created but session could not be established'
-        });
-      }
-
-      console.log('Auto-login successful!');
-      // Return the login session
-      return res.json({
-        message: 'Account created successfully',
-        user: {
-          id: loginData.user.id,
-          username: sanitizedUsername,
-          email: loginData.user.email
-        },
-        session: loginData.session
+    if (loginError || !loginData.session) {
+      console.error('Auto-login failed:', loginError);
+      return res.status(500).json({
+        error: 'Account created but login failed',
+        hint: 'Please try logging in with your username and password',
+        details: loginError?.message
       });
     }
 
+    console.log('Signup and login successful!');
+    
     res.json({
       message: 'Account created successfully',
       user: {
-        id: data.user.id,
+        id: loginData.user.id,
         username: sanitizedUsername,
-        email: data.user.email
+        email: loginData.user.email
       },
-      session: data.session
+      session: loginData.session
     });
 
   } catch (error) {
