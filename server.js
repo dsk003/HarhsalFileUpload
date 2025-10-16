@@ -161,6 +161,15 @@ app.post('/api/auth/signup', async (req, res) => {
       });
     }
 
+    // Check if session is null (email confirmation required)
+    if (!data.session) {
+      return res.status(400).json({
+        error: 'Email confirmation is required but not configured',
+        hint: 'Please disable email confirmation in Supabase: Authentication > Settings > Email Auth > Disable "Confirm email"',
+        details: 'Account was created but cannot sign in automatically'
+      });
+    }
+
     res.json({
       message: 'Account created successfully',
       user: {

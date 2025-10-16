@@ -203,6 +203,12 @@ class FileUploadApp {
         body: JSON.stringify({ username, password })
       });
 
+      // Check if session exists (it will be null if email confirmation is required)
+      if (!response.session || !response.session.access_token) {
+        this.showError('signup', 'Email confirmation is required. Please check your email or contact support.');
+        return;
+      }
+
       this.user = response.user;
       this.token = response.session.access_token;
       localStorage.setItem('token', this.token);
