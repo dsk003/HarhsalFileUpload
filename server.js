@@ -172,11 +172,33 @@ app.post('/api/auth/signup', async (req, res) => {
 
     // Check if session is null (email confirmation required)
     if (!data.session) {
-      console.error('Session is null - email confirmation likely enabled in Supabase');
-      return res.status(400).json({
-        error: 'Email confirmation is required but not configured',
-        hint: 'In Supabase Dashboard: Authentication → Settings → scroll to "Email Confirmation" and UNCHECK the box',
-        details: 'Account was created but cannot sign in automatically. User created: ' + !!data?.user
+      console.log('Session is null after signup - attempting auto-login...');
+      
+      // Try to immediately sign in with the credentials
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (loginError || !loginData.session) {
+        console.error('Auto-login failed:', loginError);
+        return res.status(400).json({
+          error: 'Account created but email confirmation required',
+          hint: 'Try logging in with your username and password',
+          details: 'User was created but session could not be established'
+        });
+      }
+
+      console.log('Auto-login successful!');
+      // Return the login session
+      return res.json({
+        message: 'Account created successfully',
+        user: {
+          id: loginData.user.id,
+          username: sanitizedUsername,
+          email: loginData.user.email
+        },
+        session: loginData.session
       });
     }
 
