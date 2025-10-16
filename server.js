@@ -133,8 +133,17 @@ app.post('/api/auth/signup', async (req, res) => {
         data: {
           username: sanitizedUsername,
           display_name: sanitizedUsername
-        }
+        },
+        emailRedirectTo: undefined
       }
+    });
+
+    // Debug logging
+    console.log('Signup response:', {
+      hasUser: !!data?.user,
+      hasSession: !!data?.session,
+      userEmail: data?.user?.email,
+      error: error
     });
 
     if (error) {
@@ -163,10 +172,11 @@ app.post('/api/auth/signup', async (req, res) => {
 
     // Check if session is null (email confirmation required)
     if (!data.session) {
+      console.error('Session is null - email confirmation likely enabled in Supabase');
       return res.status(400).json({
         error: 'Email confirmation is required but not configured',
-        hint: 'Please disable email confirmation in Supabase: Authentication > Settings > Email Auth > Disable "Confirm email"',
-        details: 'Account was created but cannot sign in automatically'
+        hint: 'In Supabase Dashboard: Authentication → Settings → scroll to "Email Confirmation" and UNCHECK the box',
+        details: 'Account was created but cannot sign in automatically. User created: ' + !!data?.user
       });
     }
 
