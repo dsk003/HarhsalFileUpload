@@ -1,352 +1,281 @@
-# File Upload App
+# File Upload Application - No Build Stack
 
-A modern, full-stack web application for uploading files to Supabase Storage. Built with React, Vite, Node.js, and Express.
+A modern file upload web application built with a **simple, no-build tech stack**. Upload files directly to Supabase storage with user authentication.
 
-## Features
+## 🎯 Tech Stack
 
-- 🔐 **Authentication** - Secure username/password login system
-- 📤 **Drag & Drop Upload** - Intuitive file upload with drag-and-drop support
-- 🎨 **Modern UI** - Beautiful, responsive design with smooth animations
-- 📁 **Any File Type** - Upload images, videos, PDFs, documents, and more
-- ☁️ **Supabase Storage** - Secure cloud storage integration
-- 📱 **Responsive Design** - Works perfectly on desktop and mobile devices
-- 📊 **File Management** - View all uploaded files with metadata
-- 🔄 **Real-time Updates** - File list updates automatically after uploads
-- 🛡️ **Protected Routes** - All file operations require authentication
-- 🏗️ **Clean Architecture** - Frontend is pure UI, all business logic in backend
-- ✅ **Backend Validation** - All input validation and sanitization on server
-- 🚀 **Single Build Command** - Optimized for Render deployment
+### Backend
+- **Node.js** with **Express.js** server
+- **Supabase** for authentication and file storage
+- RESTful API endpoints
 
-## Tech Stack
+### Frontend
+- **Vanilla HTML** - No JSX, no template engines
+- **Vanilla CSS** - No preprocessors, no frameworks
+- **Vanilla JavaScript (ES6+)** - No TypeScript, no frameworks
+- **Class-based architecture** - Organized, maintainable code
 
-### Frontend (Presentation Layer)
-- React 18
-- Vite (for fast development and building)
-- Axios (for HTTP requests)
-- Modern CSS with animations
-- **No business logic** - Pure UI components
+### Key Features
+✅ **No build process** - Files run directly without compilation  
+✅ **No bundlers** - No Vite, Webpack, Rollup, or Parcel  
+✅ **No frameworks** - Pure HTML, CSS, and JavaScript  
+✅ **CDN libraries** - External libraries loaded via CDN (none currently needed)  
+✅ **Single server** - Express serves both static files and API endpoints  
 
-### Backend (Business Logic Layer)
-- Node.js
-- Express
-- Supabase JS Client
-- Multer (for file handling)
-- **All validation and external API calls**
+## 📁 Project Structure
 
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-- Node.js (v16 or higher)
-- npm or yarn
-- A Supabase account with a storage bucket set up
-
-## Supabase Setup
-
-### Authentication Setup
-
-1. Go to [Supabase](https://supabase.com) and create an account (if you don't have one)
-2. Create a new project
-3. **Configure Authentication**:
-   - Go to **Authentication** → **Providers**
-   - Ensure **Email** provider is enabled
-   - Go to **Authentication** → **Settings**
-   - **Disable** "Enable email confirmations" or "Confirm email" (we use username@fileupload.app format)
-4. Get your API Key:
-   - Go to **Settings** → **API**
-   - Copy the **`service_role` secret key** (REQUIRED for auth to work)
-   - ⚠️ **Important**: Use service_role key, NOT the anon public key
-
-### Storage Setup
-
-1. Navigate to **Storage** in the left sidebar
-2. Create a new bucket called `uploads` (or any name you prefer)
-3. Set the bucket to **Public** if you want files to be publicly accessible
-4. Set bucket policies (see SUPABASE_SETUP.md for detailed instructions)
-
-## Installation
-
-1. Clone or download this repository
-
-2. Install root dependencies:
-```bash
-npm install
+```
+FileUpload/
+├── public/              # Static files (served by Express)
+│   ├── index.html      # Main HTML file
+│   ├── styles.css      # All styles (combined)
+│   └── app.js          # JavaScript application (class-based)
+├── server.js           # Express server with API endpoints
+├── package.json        # Node.js dependencies
+├── .env                # Environment variables
+└── README.md           # This file
 ```
 
-3. Install client dependencies:
-```bash
-cd client
-npm install
-cd ..
-```
+## 🚀 Quick Start
 
-## Configuration
+### Prerequisites
+- Node.js (v14 or higher)
+- Supabase account with:
+  - Authentication enabled
+  - Storage bucket created
+  - Email confirmation disabled (for username-based auth)
 
-1. Copy the `.env.example` file to `.env`:
-```bash
-cp .env.example .env
-```
+### Installation
 
-2. Edit the `.env` file and add your Supabase credentials:
-```env
-SUPABASE_URL=https://hfvezfqtlyegograuxqa.supabase.co
-SUPABASE_KEY=your_actual_supabase_service_role_key
-SUPABASE_BUCKET=uploads
-PORT=3001
-```
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd FileUpload
+   ```
 
-**Important:** 
-- Replace `your_actual_supabase_service_role_key` with your **service_role** key from Supabase
-- ⚠️ **Must use service_role key**, not anon public key, for authentication to work
-- Get it from: Supabase Dashboard → Settings → API → service_role key
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Running the Application
+3. **Configure environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```env
+   SUPABASE_URL=your_supabase_project_url
+   SUPABASE_KEY=your_supabase_anon_key
+   SUPABASE_BUCKET=uploads
+   PORT=3001
+   ```
 
-### Development Mode
+4. **Start the server**
+   ```bash
+   npm start
+   ```
 
-Run both the frontend and backend concurrently:
+5. **Open your browser**
+   
+   Navigate to `http://localhost:3001`
+
+That's it! No build process needed. 🎉
+
+## 🔧 Development
+
+### Running in Development Mode
 ```bash
 npm run dev
 ```
 
-This will start:
-- Frontend dev server on `http://localhost:3000`
-- Backend API server on `http://localhost:3001`
+This runs the same command as `npm start` since there's no build process.
 
-The frontend is configured to proxy API requests to the backend automatically.
+### Making Changes
 
-**First Time Usage:**
-1. Open `http://localhost:3000` in your browser
-2. You'll see a login form
-3. Click "Sign up" to create an account
-4. Enter a username and password (min 6 characters)
-5. You'll be logged in automatically
-6. Start uploading files!
+- **HTML**: Edit `public/index.html` and refresh the browser
+- **CSS**: Edit `public/styles.css` and refresh the browser
+- **JavaScript**: Edit `public/app.js` and refresh the browser
+- **Server**: Edit `server.js` and restart the server
 
-### Production Mode
+No compilation, no bundling, no waiting!
 
-1. Build the frontend:
-```bash
-npm run build
-```
+## 📚 Application Features
 
-2. Start the production server:
-```bash
-npm start
-```
+### Authentication
+- User signup with username and password
+- User login with session management
+- Secure logout
+- JWT token-based authentication
+- Session persistence with localStorage
 
-The server will serve both the API and the built React app on `http://localhost:3001`.
+### File Upload
+- Drag and drop file upload
+- Click to select file
+- File size display
+- Upload progress feedback
+- Success/error notifications
 
-## Deployment to Render
+### File Management
+- View all uploaded files
+- File icons based on type (images, videos, documents, etc.)
+- File size and date display
+- Click to view/download files
+- Refresh file list
 
-### Step 1: Prepare Your Repository
+### UI/UX
+- Modern gradient design
+- Responsive layout (mobile-friendly)
+- Smooth animations and transitions
+- Loading states
+- Error handling with user-friendly messages
 
-1. Initialize a git repository (if not already done):
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
+## 🏗️ Architecture
 
-2. Push to GitHub/GitLab/Bitbucket
+### Frontend (Vanilla JavaScript)
 
-### Step 2: Deploy to Render
-
-1. Go to [Render](https://render.com) and sign up/login
-2. Click **New +** and select **Web Service**
-3. Connect your repository
-4. Configure the service:
-   - **Name:** Your app name (e.g., `file-upload-app`)
-   - **Environment:** `Node`
-   - **Region:** Choose closest to you
-   - **Branch:** `main`
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm start`
-   - **Instance Type:** Free or paid tier
-
-### Step 3: Add Environment Variables
-
-In the Render dashboard, add the following environment variables:
-
-- `SUPABASE_URL`: `https://hfvezfqtlyegograuxqa.supabase.co`
-- `SUPABASE_KEY`: Your Supabase **service_role** key (⚠️ NOT anon key)
-- `SUPABASE_BUCKET`: `uploads` (or your bucket name)
-- `PORT`: `3001`
-- `NODE_ENV`: `production`
-
-**Important**: Must use service_role key for authentication to work!
-
-### Step 4: Deploy
-
-Click **Create Web Service** and Render will automatically deploy your app!
-
-## API Endpoints
-
-### Authentication Endpoints
-
-#### Sign Up
-```
-POST /api/auth/signup
-Content-Type: application/json
-
-Body: { username: string, password: string }
-```
-Creates a new user account.
-
-#### Login
-```
-POST /api/auth/login
-Content-Type: application/json
-
-Body: { username: string, password: string }
-```
-Authenticates user and returns JWT token.
-
-#### Verify Session
-```
-GET /api/auth/verify
-Authorization: Bearer <token>
-```
-Verifies if the current session is valid.
-
-#### Logout
-```
-POST /api/auth/logout
-Authorization: Bearer <token>
-```
-Logs out the current user.
-
-### Protected Endpoints (Require Authentication)
-
-#### Upload File
-```
-POST /api/upload
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-
-Body: { file: <file> }
-```
-Uploads a file to Supabase Storage. Requires valid JWT token.
-
-#### List Files
-```
-GET /api/files
-Authorization: Bearer <token>
-```
-Returns a list of all uploaded files with their metadata and URLs. Requires valid JWT token.
-
-### Public Endpoints
-
-#### Health Check
-```
-GET /api/health
-```
-Returns server status (no authentication required).
-
-## File Size Limits
-
-The default file size limit is 50MB. You can modify this in `server/index.js`:
+The application uses a **single class** (`FileUploadApp`) to manage the entire frontend:
 
 ```javascript
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024, // Change this value
+class FileUploadApp {
+  constructor() {
+    // Initialize state and DOM elements
   }
-});
+  
+  // Authentication methods
+  async checkAuth() { }
+  async handleLogin(e) { }
+  async handleSignup(e) { }
+  async handleLogout() { }
+  
+  // File upload methods
+  handleFileSelect(e) { }
+  async handleUpload() { }
+  async loadFiles() { }
+  
+  // UI management methods
+  showScreen(screen) { }
+  showError(form, message) { }
+  // ... more methods
+}
 ```
 
-## Project Structure
+### Backend (Express.js)
 
-```
-file-upload-app/
-├── client/                 # React frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── FileUpload.jsx
-│   │   │   ├── FileUpload.css
-│   │   │   ├── FileList.jsx
-│   │   │   ├── FileList.css
-│   │   │   ├── Login.jsx
-│   │   │   ├── Signup.jsx
-│   │   │   └── Auth.css
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── index.html
-│   ├── vite.config.js
-│   └── package.json
-├── server/                # Node.js backend
-│   └── index.js
-├── .env                   # Environment variables (not in git)
-├── .env.example          # Example environment variables
-├── .gitignore
-├── AUTH_SETUP.md         # Authentication setup guide
-├── SUPABASE_SETUP.md     # Storage setup guide
-├── package.json
-└── README.md
-```
+The server provides:
+- **Static file serving** from `/public`
+- **API endpoints**:
+  - `POST /api/auth/signup` - Create new user
+  - `POST /api/auth/login` - Login user
+  - `GET /api/auth/verify` - Verify token
+  - `POST /api/auth/logout` - Logout user
+  - `POST /api/upload` - Upload file (protected)
+  - `GET /api/files` - List files (protected)
+  - `GET /api/health` - Health check
 
-## Troubleshooting
+### Authentication Flow
 
-### Authentication Issues
+1. User enters username/password
+2. Frontend sends credentials to `/api/auth/login` or `/api/auth/signup`
+3. Backend validates with Supabase Auth
+4. Backend returns JWT token
+5. Frontend stores token in localStorage
+6. Frontend includes token in all protected API requests
+7. Backend verifies token for each protected request
 
-#### "Failed to create account" or "Failed to login"
-- **Check API Key**: Must use **service_role** key, not anon public key
-- **Disable Email Confirmation**: Go to Supabase → Authentication → Settings → Disable email confirmation
-- **Check Password**: Must be at least 6 characters
-- **Verify Supabase Auth**: Make sure Email provider is enabled in Authentication → Providers
+### File Upload Flow
 
-#### Can't access file upload (stuck on login)
-- Clear browser localStorage
-- Check browser console for errors
-- Verify service_role key is set correctly
-- Check server logs for authentication errors
+1. User selects or drags file
+2. Frontend shows file preview
+3. User clicks "Upload"
+4. Frontend sends file via FormData to `/api/upload`
+5. Backend uploads to Supabase Storage
+6. Backend returns file URL
+7. Frontend refreshes file list
 
-### Storage Issues
+## 🔐 Security
 
-#### "SUPABASE_URL and SUPABASE_KEY must be set"
-Make sure you've created a `.env` file with your Supabase credentials and service_role key.
+- JWT token authentication
+- Protected API endpoints
+- CORS enabled
+- File size limits (50MB)
+- Input validation and sanitization
+- Secure password handling by Supabase
 
-#### Upload fails with "Failed to upload file to storage"
-- Check that your Supabase **service_role** key is correct
-- Verify that the bucket name matches your Supabase bucket
-- Ensure the bucket has the correct permissions (see SUPABASE_SETUP.md)
-- Check bucket policies allow uploads
+## 🌐 Deployment
 
-#### Files not appearing in the list
-- Make sure the bucket name in `.env` matches your Supabase bucket
-- Check that files were uploaded successfully
-- Verify bucket permissions allow reading files
-- Check that you're logged in (authentication required)
+### Deploy to Render, Railway, or any Node.js host
 
-### For detailed guides:
-- **Architecture**: See `ARCHITECTURE.md` for complete system design
-- **Authentication**: See `AUTH_SETUP.md`
-- **Storage**: See `SUPABASE_SETUP.md`
-- **Deployment**: See `DEPLOY.md`
+1. **Push code to GitHub**
 
-## Security Notes
+2. **Set environment variables** on your hosting platform:
+   - `SUPABASE_URL`
+   - `SUPABASE_KEY`
+   - `SUPABASE_BUCKET`
+   - `PORT` (optional, defaults to 3001)
 
-- The `.env` file is excluded from git (via `.gitignore`)
-- Never commit your API keys to version control
-- Use environment variables for all sensitive data
-- For production, consider using a service role key with appropriate RLS policies
+3. **Deploy**
+   - Build Command: None needed! ✨
+   - Start Command: `npm start`
 
-## Contributing
+The app is production-ready as-is. No build step required!
 
-Feel free to submit issues and enhancement requests!
+## 📝 Environment Variables
 
-## License
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SUPABASE_URL` | Your Supabase project URL | Yes |
+| `SUPABASE_KEY` | Your Supabase anon/public key | Yes |
+| `SUPABASE_BUCKET` | Storage bucket name | No (defaults to 'uploads') |
+| `PORT` | Server port | No (defaults to 3001) |
 
-MIT
+## 🛠️ Customization
 
-## Support
+### Adding Features
 
-For issues related to:
-- **Supabase**: Check [Supabase Documentation](https://supabase.com/docs)
-- **Render**: Check [Render Documentation](https://render.com/docs)
-- **This app**: Open an issue in the repository
+**To add a new page/view:**
+1. Add HTML section in `public/index.html`
+2. Add styles in `public/styles.css`
+3. Add methods in `FileUploadApp` class in `public/app.js`
+
+**To add a new API endpoint:**
+1. Add route in `server.js`
+2. Add corresponding method in `FileUploadApp` class
+
+### Styling
+
+All styles are in `public/styles.css`. The app uses:
+- CSS variables for theming (easy to customize)
+- Flexbox and Grid for layouts
+- Media queries for responsiveness
+- CSS animations for smooth transitions
+
+### Adding External Libraries
+
+If you need external libraries (rare for this stack):
+
+1. Add via CDN in `public/index.html`:
+   ```html
+   <script src="https://cdn.example.com/library.js"></script>
+   ```
+
+2. No npm installation or bundling needed!
+
+## 🤝 Contributing
+
+This is a no-build project. Contributions should maintain this philosophy:
+- No frameworks
+- No build tools
+- No bundlers
+- Keep it simple!
+
+## 📄 License
+
+ISC License
+
+## 🙏 Acknowledgments
+
+- Supabase for backend services
+- Modern browsers for ES6+ support
+- The simplicity of vanilla JavaScript!
+
+---
+
+**Enjoy the simplicity of a no-build stack!** 🎉
